@@ -53,3 +53,4 @@ run/
 /*/build/
 /*/bin/
 /.profileconfig.json
+gradlew

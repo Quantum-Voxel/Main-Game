@@ -38,6 +38,9 @@ println("Project Version: $version")
 repositories {
     mavenCentral()
     mavenLocal()
+    maven { 
+        url = uri("https://quantum-voxel.github.io/Quantum-Voxel-Maven/") 
+    }
     google()
 }
 
@@ -76,6 +79,7 @@ subprojects {
 
     dependencies {
         dokkaHtmlPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:2.1.0")
+        implementation("dev.ultreon:ubo:1.6.0")     
     }
 
     repositories {
@@ -101,24 +105,13 @@ subprojects {
             }
         }
 
+        maven { 
+        url = uri("https://quantum-voxel.github.io/Quantum-Voxel-Maven/") 
+        }
+
         google();
 
-        exclusiveContent {
-            forRepository {
-                maven {
-                    name = "Ultreon Maven Releases"
-                    url = uri("https://maven.ultreon.dev/releases")
-                }
-                maven {
-                    name = "Ultreon Maven Snapshots"
-                    url = uri("https://maven.ultreon.dev/snapshots")
-                }
-            }
 
-            filter {
-                includeGroup("dev.ultreon")
-            }
-        }
 
         mavenCentral()
 
