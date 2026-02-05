@@ -1,7 +1,7 @@
 # Quantum Voxel: Next Generation
 Quantum Voxel is a block-based game currently in development.
 
-## ⚠️ Development has paused for now. The owner has paused development but I will be continuing from where it was left off. Thanks for understanding and moving over here (we may move back to gitlab at a later point.)
+## ⚠️ The owner has paused development but I will be continuing from where it was left off. Thanks for understanding and moving over here (we may move back to gitlab at a later point.)
 
 ## Licensing
 Most of the project is licensed under [Apache 2.0](LICENSE.md).  
