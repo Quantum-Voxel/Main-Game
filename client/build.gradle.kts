@@ -68,7 +68,7 @@ dependencies {
     api("org.apache.commons:commons-text:1.10.0")
     api("org.apache.commons:commons-compress:1.26.0")
     api("commons-io:commons-io:2.15.1")
-    api("commons-codec:commons-codec:1.16.0")
+    api("commons-codec:commons-codec:1.21.0")
 
     api("net.fabricmc:fabric-loader:$fabricVersion")
 
