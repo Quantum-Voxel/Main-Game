@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Client" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="dev.ultreon.qvoxel.client.QuantumClient" />
+    <module name="qvoxel.client.main" />
+    <option name="VM_PARAMETERS" value="-Dfabric.skipMcProvider=true -Dfabric.development=true -Dultreon.log.level=TRACE" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

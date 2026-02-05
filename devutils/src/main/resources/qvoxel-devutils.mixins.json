@@ -1,0 +1,12 @@
+{
+  "package": "dev.ultreon.qvoxel.devutils.mixins",
+  "minVersion": "0.8",
+  "mixins": [
+  ],
+  "client": [
+    "MeshMixin",
+    "GL11Mixin",
+    "ImGuiOverlayMixin"
+  ],
+  "server": []
+}

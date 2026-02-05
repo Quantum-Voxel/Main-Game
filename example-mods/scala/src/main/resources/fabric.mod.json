@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "example-mod",
+  "version": "${version}",
+  "name": "Example Mod",
+  "description": "An example mod for Quantum Voxel",
+  "authors": [
+    "Qubix"
+  ],
+  "entrypoints": {
+    "client": [
+      {
+        "adapter": "scala",
+        "value": "com.example.mod.client.ClientExampleMod"
+      }
+    ],
+    "main": [
+      {
+        "adapter": "scala",
+        "value": "com.example.mod.ExampleMod"
+      }
+    ]
+  }
+}

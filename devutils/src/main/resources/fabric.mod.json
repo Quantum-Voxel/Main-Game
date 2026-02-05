@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "qvoxel-devutils",
+  "version": "${version}",
+  "name": "Quantum Voxel DevUtils",
+  "description": "Developer utilities for Quantum Voxel. Provides mixin injections for debugging purposes.",
+  "authors": [
+    "Qubix"
+  ],
+  "contact": {
+    "homepage": "https://github.com/QuantumVoxel/qvoxel",
+    "sources": "https://github.com/QuantumVoxel/qvoxel/tree/main/devutils/src/main/java",
+    "issues": "https://github.com/QuantumVoxel/qvoxel/issues"
+  },
+  "entrypoints": {
+    "main": [
+      "dev.ultreon.qvoxel.devutils.DevUtilsMod"
+    ]
+  },
+  "breaks": {
+    "minecraft": "*"
+  },
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "quantum": ">=${version}"
+  },
+  "mixins": [
+    "qvoxel-devutils.mixins.json"
+  ]
+}

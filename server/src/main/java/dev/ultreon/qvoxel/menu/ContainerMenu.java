@@ -1,0 +1,318 @@
+/*
+ * Copyright 2025. Quinten 'Qubix' Jungblut
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package dev.ultreon.qvoxel.menu;
+
+import dev.ultreon.libs.commons.v0.Identifier;
+import dev.ultreon.qvoxel.CommonConstants;
+import dev.ultreon.qvoxel.entity.Entity;
+import dev.ultreon.qvoxel.item.ItemStack;
+import dev.ultreon.qvoxel.network.Packet;
+import dev.ultreon.qvoxel.network.handler.InGameClientPacketHandler;
+import dev.ultreon.qvoxel.network.packets.s2c.S2CMenuContentChangedPacket;
+import dev.ultreon.qvoxel.player.PlayerEntity;
+import dev.ultreon.qvoxel.server.ServerPlayerEntity;
+import dev.ultreon.qvoxel.world.container.Container;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+/**
+ * A class that holds a bunch of item slots.
+ *
+ * @see ItemSlot
+ * @see ItemStack
+ * @see MenuType
+ */
+public abstract class ContainerMenu implements Menu {
+    private final @NotNull MenuType<?> type;
+    private final @NotNull Entity entity;
+    @ApiStatus.Internal
+    public ItemSlot[] slots;
+
+    protected final List<PlayerEntity> watching = new CopyOnWriteArrayList<>();
+    private @Nullable String customTitle = null;
+    private final Container<?> container;
+
+    /**
+     * Creates a new {@link ContainerMenu}
+     *
+     * @param type   the type of the menu.
+     * @param entity the entity that opened the menu.
+     * @param size   the number of slots.
+     */
+    protected ContainerMenu(@NotNull MenuType<?> type, @NotNull Entity entity, int size, @Nullable Container<?> container) {
+        this.container = container;
+
+        this.type = type;
+        this.entity = entity;
+        slots = new ItemSlot[size];
+    }
+
+    protected final ItemSlot addSlot(ItemSlot slot) {
+        slots[slot.index] = slot;
+        return slot;
+    }
+
+    public @NotNull MenuType<?> getType() {
+        return type;
+    }
+
+    public @NotNull Entity getEntity() {
+        return entity;
+    }
+
+    /**
+     * Builds the menu and fills it with item slots.
+     */
+    public void build() {
+
+    }
+
+    public ItemSlot get(int index) {
+        return slots[index];
+    }
+
+    /**
+     * Called when an item is changed in the menu
+     *
+     * @param slot the slot that was changed
+     */
+    protected void onChanged(ItemSlot slot) {
+        for (PlayerEntity player : watching) {
+            if (!(player instanceof ServerPlayerEntity serverPlayer)) continue;
+            Packet<InGameClientPacketHandler> packet = createPacket(serverPlayer, slot);
+            if (packet != null && !serverPlayer.connection.isLoggingIn()) {
+                serverPlayer.connection.send(packet);
+            }
+        }
+    }
+
+    protected @Nullable Packet<InGameClientPacketHandler> createPacket(ServerPlayerEntity player, ItemSlot... slots) {
+        if (player.getOpenMenu() != this) return null;
+
+        Map<Integer, ItemStack> map = new HashMap<>();
+        for (ItemSlot slot : slots) {
+            if (map.put(slot.index, slot.getItem()) != null) {
+                throw new IllegalStateException("Duplicate key");
+            }
+        }
+
+        return new S2CMenuContentChangedPacket(getType().getRawId(), map);
+    }
+
+    public void setItem(int index, ItemStack stack) {
+        slots[index].setItem(stack, false);
+    }
+
+    public ItemStack getItem(int index) {
+        return slots[index].getItem();
+    }
+
+    public ItemStack takeItem(int index) {
+        return slots[index].takeItem();
+    }
+
+    /**
+     * Adds a player to the list of watchers.
+     *
+     * @param player the player to be added
+     */
+    public void addWatcher(PlayerEntity player) {
+        watching.add(player);
+    }
+
+    /**
+     * Removes a player from the list of watchers.
+     *
+     * @param player the player to be removed
+     */
+    public void removeWatcher(PlayerEntity player) {
+        if (!watching.contains(player)) {
+            CommonConstants.LOGGER.warn("Player {} is not a watcher of {}", player, this);
+            return;
+        }
+        watching.remove(player);
+        if (watching.isEmpty()) {
+            close();
+        }
+    }
+
+    private void close() {
+        if (getEntity() instanceof PlayerEntity player) {
+            player.closeMenu();
+        }
+    }
+
+    /**
+     * onTakeItem method is called when a player takes an item from a specific slot.
+     * <p>NOTE: This method is meant for override only</p>
+     *
+     * @param player     the server player who is taking the item
+     * @param index      the index of the slot from which the item is being taken
+     * @param rightClick a boolean indicating whether the player right-clicked to take the item
+     */
+    @ApiStatus.OverrideOnly
+    public void onTakeItem(ServerPlayerEntity player, int index, boolean rightClick) {
+        ItemSlot slot = slots[index];
+
+        if (rightClick) {
+            // Right click transfer
+            if (slot.mayPickup(player) && player.getCursor().isEmpty()) {
+                // Split item from slot and put it in the cursor
+                ItemStack item = slot.split();
+                slot.update();
+                player.setCursor(item);
+            } else if (slot.mayPlace(player.getCursor().getItem())) {
+                // Transfer one item from cursor to slot
+                int i = player.getCursor().transferTo(slot.getItem(), 1);
+                if (i == 0) {
+                    slot.update();
+                    player.setCursor(player.getCursor());
+                }
+            }
+            return;
+        }
+
+        // Left click transfer
+        ItemStack cursor = player.getCursor();
+        ItemStack slotItem = slot.getItem();
+
+        if (slot.mayPlace(cursor.getItem()) && !cursor.isEmpty() && cursor.sameItemSameData(slotItem)) {
+            // Take item from cursor and put it in the slot, remaining items are left in the cursor.
+            cursor.transferTo(slotItem, cursor.getCount());
+            slot.update();
+            player.setCursor(player.getCursor());
+            return;
+        }
+
+        if (slot.mayPickup(player) && cursor.isEmpty()) {
+            // Take item from slot and put it in the cursor
+            ItemStack toSet = slot.takeItem();
+            player.setCursor(toSet);
+        } else if (slot.mayPickup(player)) {
+            // Swap items between cursor and slot
+            slot.setItem(cursor);
+            player.setCursor(slotItem);
+        }
+    }
+
+    /**
+     * Retrieves the title of the menu.
+     *
+     * @return the title
+     */
+    public String getTitle() {
+        Identifier id = getType().getId();
+
+        if (customTitle == null)
+            return "<$" + id.location() + ".menu." + id.path().replace('/', '.') + ">";
+        return customTitle;
+    }
+
+    /**
+     * Gets the custom title of the menu.
+     *
+     * @return the custom title or null if it isn't set.
+     */
+    public @Nullable String getCustomTitle() {
+        return customTitle;
+    }
+
+    /**
+     * Sets the custom title of the menu.
+     *
+     * @param customTitle the custom title to set or null to remove it.
+     */
+    public void setCustomTitle(@Nullable String customTitle) {
+        this.customTitle = customTitle;
+    }
+
+    @Override
+    public String toString() {
+        return "ContainerMenu[" + getType().getId() + "]";
+    }
+
+    public boolean hasViewers() {
+        return !watching.isEmpty();
+    }
+
+    public boolean isOnItsOwn() {
+        return watching.isEmpty();
+    }
+
+    protected int inventoryMenu(int idx, int offX, int offY) {
+        if (getEntity() instanceof PlayerEntity player) {
+            for (int x = 0; x < 9; x++) {
+                addSlot(new RedirectItemSlot(idx++, player.inventory.hotbar[x], offX + x * 19 + 6, offY + 83));
+            }
+
+            for (int x = 0; x < 9; x++) {
+                for (int y = 0; y < 3; y++) {
+                    addSlot(new RedirectItemSlot(idx++, player.inventory.inv[x][y], offX + x * 19 + 6, offY + y * 19 + 6));
+                }
+            }
+        } else {
+            CommonConstants.LOGGER.debug("Entity is not a player, skipping inventory menu.");
+        }
+
+        return idx;
+    }
+
+    public Container<?> getContainer() {
+        return container;
+    }
+
+    /**
+     * Sends all items to the players watching the menu.
+     * <p>
+     * API Note: Should only be called when strictly necessary. Sending all items too frequently can cause lag and too much unnecessary network traffic.
+     */
+    @ApiStatus.Internal
+    public void onAllChanged() {
+        for (PlayerEntity player : watching) {
+            if (!(player instanceof ServerPlayerEntity serverPlayer)) continue;
+
+            Packet<InGameClientPacketHandler> packet = createPacket(serverPlayer, slots);
+            if (packet == null) continue;
+            if (serverPlayer.connection != null && !serverPlayer.connection.isLoggingIn())
+                serverPlayer.connection.send(packet);
+            else
+                CommonConstants.LOGGER.debug("Player is logging in, not sending menu update packet.");
+        }
+    }
+
+    public void setAll(ItemStack[] stack) {
+        for (int i = 0; i < stack.length; i++) {
+            slots[i].setItem(stack[i], false);
+        }
+    }
+
+    protected void onChanged(List<ItemSlot> changed) {
+        for (PlayerEntity player : watching) {
+            if (!(player instanceof ServerPlayerEntity serverPlayer)) continue;
+            Packet<InGameClientPacketHandler> packet = createPacket(serverPlayer, changed.toArray(new ItemSlot[0]));
+            if (packet != null && !serverPlayer.connection.isLoggingIn()) {
+                serverPlayer.connection.send(packet);
+            }
+        }
+    }
+}

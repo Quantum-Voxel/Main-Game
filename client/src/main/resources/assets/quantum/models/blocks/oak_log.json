@@ -1,0 +1,24 @@
+{
+  "parent": "quantum:cube_all",
+  "textures": {
+    "buried": "quantum:blocks/oak_log_side",
+    "particle": "quantum:blocks/oak_log_side",
+    "vertical": "quantum:blocks/oak_log",
+    "side": "quantum:blocks/oak_log_side"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "color": 1,
+      "faces": {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "north"},
+        "east": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "east"},
+        "south": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "south"},
+        "west": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "west"},
+        "up": {"uv": [0, 0, 16, 16], "texture": "#vertical", "cullface": "up"},
+        "down": {"uv": [0, 0, 16, 16], "texture": "#vertical", "cullface": "down"}
+      }
+    }
+  ]
+}
