@@ -58,7 +58,7 @@ dependencies {
     api("net.fabricmc:sponge-mixin:$mixinVersion")
 
     api("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
-    api("net.fabricmc:tiny-remapper:0.12.0")
+    api("net.fabricmc:tiny-remapper:0.12.3")
     api("net.fabricmc:dev-launch-injector:0.2.1+build.8")
     api("net.fabricmc:access-widener:2.1.0")
 
