@@ -49,10 +49,10 @@ dependencies {
     api("com.github.oshi:oshi-core:6.9.0")
 
     // ImGui
-    api("io.github.spair:imgui-java-lwjgl3:1.88.0")
-    api("io.github.spair:imgui-java-natives-linux:1.88.0")
-    api("io.github.spair:imgui-java-natives-macos:1.88.0")
-    api("io.github.spair:imgui-java-natives-windows:1.88.0")
+    api("io.github.spair:imgui-java-lwjgl3:1.90.0")
+    api("io.github.spair:imgui-java-natives-linux:1.90.0")
+    api("io.github.spair:imgui-java-natives-macos:1.90.0")
+    api("io.github.spair:imgui-java-natives-windows:1.90.0")
 
     // Fabric Loader
     api("net.fabricmc:sponge-mixin:$mixinVersion")
